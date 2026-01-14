@@ -20,6 +20,9 @@ public class ObjectPickup : MonoBehaviour
     [Header("Rotation Settings")]
     [SerializeField] private float rotationSpeed = 100f;
 
+    [Header("Hold Offset (Camera Relative)")]
+    [SerializeField] private Vector3 holdOffset = new Vector3(0.6f, -0.4f, 0.2f);
+
     private Camera playerCamera;
     private GameObject heldObject;
     private Rigidbody heldObjectRigidbody;
@@ -27,41 +30,30 @@ public class ObjectPickup : MonoBehaviour
     private bool isRotating;
     private Vector3 lastMousePosition;
 
+    // NEW: extra rotation relative to camera
+    private Quaternion rotationOffset = Quaternion.identity;
+
     void Start()
     {
         playerCamera = Camera.main;
         currentHoldDistance = holdDistance;
-        Debug.Log("ObjectPickup script initialized. Camera found: " + (playerCamera != null));
     }
 
     void Update()
     {
         if (heldObject == null)
         {
-            // Try to pick up object
             if (Input.GetKeyDown(pickupKey))
-            {
                 TryPickupObject();
-            }
-
-            // Highlight object when looking at it (optional)
-            CheckForPickupable();
         }
         else
         {
-            // Drop object
             if (Input.GetKeyDown(pickupKey))
-            {
                 DropObject(false);
-            }
 
-            // Throw object
             if (Input.GetMouseButtonDown(0))
-            {
                 DropObject(true);
-            }
 
-            // Adjust hold distance with mouse scroll
             float scroll = Input.GetAxis("Mouse ScrollWheel");
             if (scroll != 0f)
             {
@@ -69,24 +61,17 @@ public class ObjectPickup : MonoBehaviour
                 currentHoldDistance = Mathf.Clamp(currentHoldDistance, minHoldDistance, maxHoldDistance);
             }
 
-            // Rotation mode
             if (Input.GetKeyDown(rotateKey))
             {
                 isRotating = !isRotating;
-                if (isRotating)
-                {
-                    lastMousePosition = Input.mousePosition;
-                }
+                lastMousePosition = Input.mousePosition;
             }
 
-            // Move held object
-            MoveObject();
-
-            // Rotate object if in rotation mode
             if (isRotating)
-            {
                 RotateObject();
-            }
+
+            // ALWAYS rotate with camera
+            ApplyCameraRotation();
         }
     }
 
@@ -94,10 +79,13 @@ public class ObjectPickup : MonoBehaviour
     {
         if (heldObject != null && heldObjectRigidbody != null)
         {
-            // Calculate target position
-            Vector3 targetPosition = playerCamera.transform.position + playerCamera.transform.forward * currentHoldDistance;
+            Vector3 targetPosition =
+                playerCamera.transform.position +
+                playerCamera.transform.forward * currentHoldDistance +
+                playerCamera.transform.right * holdOffset.x +
+                playerCamera.transform.up * holdOffset.y +
+                playerCamera.transform.forward * holdOffset.z;
 
-            // Smoothly move object using physics
             Vector3 direction = targetPosition - heldObject.transform.position;
             heldObjectRigidbody.linearVelocity = direction * pickupForce * Time.fixedDeltaTime;
         }
@@ -105,37 +93,11 @@ public class ObjectPickup : MonoBehaviour
 
     private void TryPickupObject()
     {
-        Debug.Log("Trying to pickup object...");
         RaycastHit hit;
         if (Physics.Raycast(playerCamera.transform.position, playerCamera.transform.forward, out hit, pickupDistance))
         {
-            Debug.Log("Raycast hit: " + hit.collider.name + " with tag: " + hit.collider.tag);
-            if (hit.collider.tag == "Moveable")
-            {
-                Debug.Log("Found Moveable object: " + hit.collider.name);
+            if (hit.collider.CompareTag("Moveable"))
                 PickupObject(hit.collider.gameObject);
-            }
-            else
-            {
-                Debug.Log("Object is not tagged as Moveable. Current tag: " + hit.collider.tag);
-            }
-        }
-        else
-        {
-            Debug.Log("No object in range (distance: " + pickupDistance + "m)");
-        }
-    }
-
-    private void CheckForPickupable()
-    {
-        RaycastHit hit;
-        if (Physics.Raycast(playerCamera.transform.position, playerCamera.transform.forward, out hit, pickupDistance))
-        {
-            if (hit.collider.tag == "Moveable")
-            {
-                // You can add UI feedback here (e.g., show "Press E to pick up")
-                Debug.DrawLine(playerCamera.transform.position, hit.point, Color.green);
-            }
         }
     }
 
@@ -144,50 +106,32 @@ public class ObjectPickup : MonoBehaviour
         heldObject = obj;
         heldObjectRigidbody = obj.GetComponent<Rigidbody>();
 
-        if (heldObjectRigidbody != null)
+        if (heldObjectRigidbody == null)
         {
-            // Configure rigidbody for pickup
-            heldObjectRigidbody.useGravity = false;
-            heldObjectRigidbody.linearDamping = 10f;
-            heldObjectRigidbody.angularDamping = 5f;
-            heldObjectRigidbody.interpolation = RigidbodyInterpolation.Interpolate;
-            Debug.Log("✓ Picked up: " + obj.name);
-        }
-        else
-        {
-            Debug.LogWarning("Object " + obj.name + " has no Rigidbody! Cannot pick up.");
             heldObject = null;
             return;
         }
 
-        // Reset hold distance
+        heldObjectRigidbody.useGravity = false;
+        heldObjectRigidbody.linearDamping = 10f;
+        heldObjectRigidbody.angularDamping = 5f;
+        heldObjectRigidbody.interpolation = RigidbodyInterpolation.Interpolate;
+
         currentHoldDistance = holdDistance;
+        rotationOffset = Quaternion.identity;
         isRotating = false;
     }
 
-    private void DropObject(bool throw_object)
+    private void DropObject(bool throwObject)
     {
-        if (heldObject == null) return;
-
-        string objectName = heldObject.name;
-
         if (heldObjectRigidbody != null)
         {
-            // Reset rigidbody settings
             heldObjectRigidbody.useGravity = true;
             heldObjectRigidbody.linearDamping = 0f;
             heldObjectRigidbody.angularDamping = 0.05f;
 
-            // Apply throw force if needed
-            if (throw_object)
-            {
+            if (throwObject)
                 heldObjectRigidbody.AddForce(playerCamera.transform.forward * throwForce, ForceMode.VelocityChange);
-                Debug.Log("✓ Threw: " + objectName);
-            }
-            else
-            {
-                Debug.Log("✓ Dropped: " + objectName);
-            }
         }
 
         heldObject = null;
@@ -195,33 +139,25 @@ public class ObjectPickup : MonoBehaviour
         isRotating = false;
     }
 
-    private void MoveObject()
-    {
-        if (heldObject == null) return;
-
-        // This is handled in FixedUpdate for physics-based movement
-    }
-
     private void RotateObject()
     {
-        if (heldObject == null) return;
-
         Vector3 mouseDelta = Input.mousePosition - lastMousePosition;
 
-        // Rotate object based on mouse movement
-        heldObject.transform.Rotate(playerCamera.transform.up, -mouseDelta.x * rotationSpeed * Time.deltaTime, Space.World);
-        heldObject.transform.Rotate(playerCamera.transform.right, mouseDelta.y * rotationSpeed * Time.deltaTime, Space.World);
+        Quaternion yaw =
+            Quaternion.AngleAxis(-mouseDelta.x * rotationSpeed * Time.deltaTime, Vector3.up);
+        Quaternion pitch =
+            Quaternion.AngleAxis(mouseDelta.y * rotationSpeed * Time.deltaTime, Vector3.right);
+
+        rotationOffset = yaw * pitch * rotationOffset;
 
         lastMousePosition = Input.mousePosition;
     }
 
-    void OnDrawGizmosSelected()
+    private void ApplyCameraRotation()
     {
-        // Draw pickup distance in editor
-        if (playerCamera != null)
-        {
-            Gizmos.color = Color.yellow;
-            Gizmos.DrawWireSphere(playerCamera.transform.position, pickupDistance);
-        }
+        if (heldObject == null) return;
+
+        heldObject.transform.rotation =
+            playerCamera.transform.rotation * rotationOffset;
     }
 }
