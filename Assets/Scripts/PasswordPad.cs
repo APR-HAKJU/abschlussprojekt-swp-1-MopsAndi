@@ -19,7 +19,7 @@ public class PasswordPad : MonoBehaviour
     [SerializeField] public GameObject passwordPadUI; // Reference to the Password Pad UI GameObject
 
     private string enteredPassword = "";
-    private const int MAX_PASSWORD_LENGTH = 3;
+    private const int MAX_PASSWORD_LENGTH = 4;
     private StarterAssetsInputs playerInputs;
 
     void Start()
