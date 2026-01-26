@@ -18,6 +18,9 @@ public class PasswordPad : MonoBehaviour
 
     [SerializeField] public GameObject passwordPadUI; // Reference to the Password Pad UI GameObject
 
+    [SerializeField] private TMPro.TextMeshProUGUI codeDisplayText; // TMP to show the code (e.g., "7") when password is correct
+    [SerializeField] private string codeToDisplay = "Die Finale Zahl für die Escape-Türe ist: 7"; // The code to display when correct password is entered
+
     private string enteredPassword = "";
     private const int MAX_PASSWORD_LENGTH = 4;
     private StarterAssetsInputs playerInputs;
@@ -28,6 +31,12 @@ public class PasswordPad : MonoBehaviour
         // be inactive at start
         passwordPadUI.SetActive(false);
         messageText.text = "";
+
+        // Hide code display at start
+        if (codeDisplayText != null)
+        {
+            codeDisplayText.text = "";
+        }
 
         // Setup number buttons (1-9)
         for (int i = 0; i < numberButtons.Length; i++)
@@ -106,6 +115,12 @@ public class PasswordPad : MonoBehaviour
         }
 
         Debug.Log("Password correct! Door Unlocked!");
+
+        // Display the code
+        if (codeDisplayText != null)
+        {
+            codeDisplayText.text = codeToDisplay;
+        }
 
         // Exit the game
     }
