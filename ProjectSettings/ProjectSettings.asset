@@ -86,7 +86,6 @@ PlayerSettings:
   muteOtherAudioSources: 0
   Prepare IOS For Recording: 0
   Force IOS Speakers When Recording: 0
-  audioSpatialExperience: 0
   deferSystemGesturesMode: 0
   hideHomeButton: 0
   submitAnalytics: 1
@@ -921,11 +920,11 @@ PlayerSettings:
   captureStartupLogs: {}
   activeInputHandler: 2
   windowsGamepadBackendHint: 0
-  cloudProjectId: 2b800edb-4c02-4b71-a01e-64a282ef1e5b
+  cloudProjectId: 29dbbbd9-7f52-4dee-b53d-6d47f5200794
   framebufferDepthMemorylessMode: 0
   qualitySettingsNames: []
-  projectName: Escape-The-Room-4C
-  organizationId: didi3825
+  projectName: skili3dsupidupi
+  organizationId: skili_12
   cloudEnabled: 0
   legacyClampBlendShapeWeights: 0
   hmiLoadingImage: {fileID: 0}
