@@ -3396,6 +3396,7 @@ MonoBehaviour:
   pickupForce: 150
   throwForce: 10
   rotationSpeed: 100
+  holdOffset: {x: 0.6, y: -0.4, z: 0.2}
 --- !u!1001 &1442440705
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -4346,7 +4347,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f3fd0de8ced334560b10d063f6b7b69b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Door
-  sceneName: Skili
+  sceneName: Door-3-Toast-Links
   interactionDistance: 2
   interactionKey: 101
 --- !u!1 &1947972170 stripped
@@ -4782,6 +4783,8 @@ MonoBehaviour:
   wrongPasswordDisplayTime: 2
   exitDoor: {fileID: 1322911213}
   passwordPadUI: {fileID: 339799242}
+  codeDisplayText: {fileID: 0}
+  codeToDisplay: "Die Finale Zahl f\xFCr die Escape-T\xFCre ist: 7"
 --- !u!4 &2106230495
 Transform:
   m_ObjectHideFlags: 0
